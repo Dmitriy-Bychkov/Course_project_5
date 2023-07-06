@@ -4,7 +4,6 @@ version = "0.1.0"
 description = ""
 authors = ["Dmitriy Bychkov <582620@gmail.com>"]
 readme = "README.md"
-packages = [{include = "course_project_5"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
