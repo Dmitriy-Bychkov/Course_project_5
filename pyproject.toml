@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "course-project-5"
+version = "0.1.0"
+description = ""
+authors = ["Dmitriy Bychkov <582620@gmail.com>"]
+readme = "README.md"
+packages = [{include = "course_project_5"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
