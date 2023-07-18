@@ -5,64 +5,64 @@ import psycopg2
 class DBManager:
     """Класс для подключения к БД Postgres и работы с ней"""
 
-    def __init__(self, database_name=None):
+    def __init__(self, database_name: str, params: dict):
         self.database_name = database_name
+        self.params = params
+        self.conn = psycopg2.connect(dbname=self.database_name, **self.params)
+        self.cur = self.conn.cursor()
 
     def __repr__(self):
         return f'{self.__class__.__name__}()'
 
-    @staticmethod
-    def get_companies_and_vacancies_count(database_name: str, params: dict):
+    def get_companies_and_vacancies_count(self):
         """
         Получает список всех компаний и
         количество вакансий у каждой компании
         """
 
-        conn = psycopg2.connect(dbname=database_name, **params)
-        cur = conn.cursor()
-        cur.execute(
+        # conn = psycopg2.connect(dbname=database_name, **params)
+        # cur = conn.cursor()
+        self.cur.execute(
             """
             SELECT * FROM companies
             """)
-        rows = cur.fetchall()
+        rows = self.cur.fetchall()
 
         for data in rows:
             print(f'id: {data[0]}, company: {data[1]}, vac_count: {data[2]}')
 
-        cur.close()
-        conn.close()
+        self.cur.close()
+        self.conn.close()
 
-    @staticmethod
-    def get_all_vacancies(database_name: str, params: dict):
+    def get_all_vacancies(self):
         """
         Получает список всех вакансий с указанием названия компании,
         названия вакансии и зарплаты и ссылки на вакансию
         """
 
-        conn = psycopg2.connect(dbname=database_name, **params)
-        cur = conn.cursor()
-        cur.execute(
+        # conn = psycopg2.connect(dbname=database_name, **params)
+        # cur = conn.cursor()
+        self.cur.execute(
             """
             SELECT company_name, vacancy_name, salary_from, salary_to, vacancy_url 
             FROM vacancies
             """)
-        rows = cur.fetchall()
+        rows = self.cur.fetchall()
 
         for data in rows:
             print(
                 f'company: {data[0]}, vacancy: {data[1]}, salary_from: {data[2]}, '
                 f'salary_to: {data[3]}, url: {data[4]}')
 
-        cur.close()
-        conn.close()
+        self.cur.close()
+        self.conn.close()
 
-    @staticmethod
-    def get_avg_salary(database_name: str, params: dict):
+    def get_avg_salary(self):
         """Получает среднюю зарплату по вакансиям"""
 
-        conn = psycopg2.connect(dbname=database_name, **params)
-        cur = conn.cursor()
-        cur.execute(
+        # conn = psycopg2.connect(dbname=database_name, **params)
+        # cur = conn.cursor()
+        self.cur.execute(
             """
             SELECT company_name, vacancy_name, salary_from, salary_to, CASE
             WHEN salary_from IS NOT NULL AND salary_to IS NULL THEN salary_from
@@ -72,26 +72,25 @@ class DBManager:
             END as avg_salary, vacancy_url
             FROM vacancies
             """)
-        rows = cur.fetchall()
+        rows = self.cur.fetchall()
 
         for data in rows:
             print(
                 f'company: {data[0]}, vacancy: {data[1]}, salary_from: {data[2]}, '
                 f'salary_to: {data[3]}, avg_salary: {data[4]},url: {data[5]}')
 
-        cur.close()
-        conn.close()
+        self.cur.close()
+        self.conn.close()
 
-    @staticmethod
-    def get_vacancies_with_higher_salary(database_name: str, params: dict):
+    def get_vacancies_with_higher_salary(self):
         """
         Получает список всех вакансий, у которых
         зарплата выше средней по всем вакансиям
         """
 
-        conn = psycopg2.connect(dbname=database_name, **params)
-        cur = conn.cursor()
-        cur.execute(
+        # conn = psycopg2.connect(dbname=database_name, **params)
+        # cur = conn.cursor()
+        self.cur.execute(
             """
             WITH salaries AS (
             SELECT company_name, vacancy_name, salary_from, salary_to, vacancy_url,
@@ -107,33 +106,32 @@ class DBManager:
             FROM salaries
             WHERE avg_salary > (SELECT AVG(avg_salary) FROM salaries)
             """)
-        rows = cur.fetchall()
+        rows = self.cur.fetchall()
 
         for data in rows:
             print(
                 f'company: {data[0]}, vacancy: {data[1]}, salary_from: {data[2]}, '
                 f'salary_to: {data[3]}, url: {data[4]}')
 
-        cur.close()
-        conn.close()
+        self.cur.close()
+        self.conn.close()
 
-    @staticmethod
-    def get_vacancies_with_keyword(database_name: str, params: dict, keyword: str):
+    def get_vacancies_with_keyword(self, keyword: str):
         """
         Получает список всех вакансий, в названии которых
         содержатся переданные в метод слова, например “python”
         """
 
-        conn = psycopg2.connect(dbname=database_name, **params)
-        cur = conn.cursor()
+        # conn = psycopg2.connect(dbname=database_name, **params)
+        # cur = conn.cursor()
         query = """
                 SELECT company_name, vacancy_name, salary_from, salary_to, vacancy_url
                 FROM vacancies 
                 WHERE lower(vacancy_name) LIKE lower(%s)
                 """
         search_keyword = f"%{keyword}%"
-        cur.execute(query, (search_keyword,))
-        rows = cur.fetchall()
+        self.cur.execute(query, (search_keyword,))
+        rows = self.cur.fetchall()
 
         if len(rows) == 0:
             print("Нет результатов по вашему запросу")
@@ -143,28 +141,27 @@ class DBManager:
                     f'company: {data[0]}, vacancy: {data[1]}, salary_from: {data[2]}, '
                     f'salary_to: {data[3]}, url: {data[4]}')
 
-        cur.close()
-        conn.close()
+        self.cur.close()
+        self.conn.close()
 
-    @staticmethod
-    def create_database(database_name: str, params: dict):
+    def create_database(self):
         """
         Создание базы данных и таблиц для сохранения
         данных о вакансиях и компаниях.
         """
 
-        conn = psycopg2.connect(dbname='postgres', **params)
-        conn.autocommit = True
-        cur = conn.cursor()
+        # conn = psycopg2.connect(dbname='postgres', **params)
+        self.conn.autocommit = True
+        # cur = conn.cursor()
 
-        cur.execute(f"DROP DATABASE IF EXISTS {database_name}")
-        cur.execute(f"CREATE DATABASE {database_name}")
+        self.cur.execute(f"DROP DATABASE IF EXISTS {self.database_name}")
+        self.cur.execute(f"CREATE DATABASE {self.database_name}")
 
-        conn.close()
+        self.conn.close()
 
-        conn = psycopg2.connect(dbname=database_name, **params)
+        # conn = psycopg2.connect(dbname=database_name, **params)
 
-        with conn.cursor() as cur:
+        with self.cur as cur:
             cur.execute("""
                         CREATE TABLE companies (
                             company_id INTEGER PRIMARY KEY,
@@ -173,7 +170,7 @@ class DBManager:
                         )
                     """)
 
-        with conn.cursor() as cur:
+        with self.cur as cur:
             cur.execute("""
                         CREATE TABLE vacancies (
                             vacancy_id SERIAL PRIMARY KEY,
@@ -187,16 +184,15 @@ class DBManager:
                         )
                     """)
 
-        conn.commit()
-        conn.close()
+        self.conn.commit()
+        self.conn.close()
 
-    @staticmethod
-    def save_data_to_database(data: list[dict[str, Any]], database_name: str, params: dict):
+    def save_data_to_database(self, data: list[dict[str, Any]]):
         """Сохранение данных о компаниях и вакансиях в базу данных."""
 
-        conn = psycopg2.connect(dbname=database_name, **params)
+        # conn = psycopg2.connect(dbname=database_name, **params)
 
-        with conn.cursor() as cur:
+        with self.cur as cur:
             for company in data:
                 company_id = company['items'][0]['employer']['id']
                 vacancies_count = company['found']
@@ -243,5 +239,5 @@ class DBManager:
                         (company_id, company_name, vacancy_name, salary_from, salary_to, currency, vacancy_url)
                     )
 
-        conn.commit()
-        conn.close()
+        self.conn.commit()
+        self.conn.close()
