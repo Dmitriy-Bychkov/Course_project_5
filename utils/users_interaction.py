@@ -11,7 +11,7 @@ def users_interaction_logic():
 
     # Создаем рабочие переменные и экземпляры классов
     hh_data = HHApi()
-    db_manager = DBManager()
+    # db_manager = DBManager()
     params = config()
 
     # Блок приветсвия
@@ -34,10 +34,11 @@ def users_interaction_logic():
             print('Название базы не должно начинаться с цифры, попробуйте повторить ввод!')
 
         else:
-            db_manager.create_database(database_name, params)
+            db_manager = DBManager(database_name, params)
+            db_manager.create_database()
             print('Создаю базу данных и сохраняю вакансии...')
             print(f'База данных "{database_name}" создана успешно!')
-            db_manager.save_data_to_database(companies_data, database_name, params)
+            db_manager.save_data_to_database(companies_data)
             print('Все вакансии сохранены.')
             break
 
@@ -61,22 +62,22 @@ def users_interaction_logic():
 
         else:
             if user_select == '1':
-                db_manager.get_companies_and_vacancies_count(database_name, params)
+                db_manager.get_companies_and_vacancies_count()
                 break
 
             elif user_select == '2':
-                db_manager.get_all_vacancies(database_name, params)
+                db_manager.get_all_vacancies()
                 break
 
             elif user_select == '3':
-                db_manager.get_avg_salary(database_name, params)
+                db_manager.get_avg_salary()
                 break
 
             elif user_select == '4':
-                db_manager.get_vacancies_with_higher_salary(database_name, params)
+                db_manager.get_vacancies_with_higher_salary()
                 break
 
             elif user_select == '5':
                 user_keyword = input('Введите слово для поиска:\n')
-                db_manager.get_vacancies_with_keyword(database_name, params, user_keyword)
+                db_manager.get_vacancies_with_keyword(user_keyword)
                 break
