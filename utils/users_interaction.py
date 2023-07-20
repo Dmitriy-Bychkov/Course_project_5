@@ -11,7 +11,6 @@ def users_interaction_logic():
 
     # Создаем рабочие переменные и экземпляры классов
     hh_data = HHApi()
-    # db_manager = DBManager()
     params = config()
 
     # Блок приветсвия
@@ -22,7 +21,7 @@ def users_interaction_logic():
     input("Нажмите клавишу 'Enter' для начала парсинга!\n")
 
     # Блок загрузки данных по АПИ
-    print('Загружаю список компаний и их вакансий...')
+    # print('Загружаю список компаний и их вакансий...')
     companies_data = hh_data.get_hh_data()
     print('Список успешно загружен!')
     print(f"Всего было загружено: {len(companies_data) * len(companies_data[0]['items'])} вакансий.\n")
@@ -34,11 +33,10 @@ def users_interaction_logic():
             print('Название базы не должно начинаться с цифры, попробуйте повторить ввод!')
 
         else:
-            db_manager = DBManager(database_name, params)
-            db_manager.create_database()
+            DBManager.create_database(database_name, params)
             print('Создаю базу данных и сохраняю вакансии...')
             print(f'База данных "{database_name}" создана успешно!')
-            db_manager.save_data_to_database(companies_data)
+            DBManager.save_data_to_database(companies_data, database_name, params)
             print('Все вакансии сохранены.')
             break
 
@@ -46,6 +44,9 @@ def users_interaction_logic():
     print('.' * 50)
     print('Теперь вы можете вывести на экран данные из базы\n'
           '(или просто введите "exit" для выхода)\n')
+
+    # создаем экземпляр класса DBManager для работы с его методами
+    db_manager = DBManager(database_name, params)
     while True:
         user_select = input('Введите соответствующую цифру для дальнейшей работы:\n'
                             '1 - Вывести список всех компаний и количество вакансий у каждой компании\n'
