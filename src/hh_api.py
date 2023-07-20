@@ -1,6 +1,6 @@
 from typing import Any
 from src.companies_list import companies_ids
-
+from tqdm import tqdm
 import requests
 
 
@@ -19,7 +19,9 @@ class HHApi:
 
         company_data = []
 
-        for company_id in companies_ids:
+        # Используем модуль tqdm для отображения прогресса выполнения метода
+        for company_id in tqdm(companies_ids,
+                               desc='Загружаю список компаний и их вакансий'):
             params = {
                 "employer_id": company_id,
                 "per_page": self.per_page,
