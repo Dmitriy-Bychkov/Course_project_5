@@ -20,8 +20,6 @@ class DBManager:
         количество вакансий у каждой компании
         """
 
-        # conn = psycopg2.connect(dbname=database_name, **params)
-        # cur = conn.cursor()
         self.cur.execute(
             """
             SELECT * FROM companies
@@ -40,8 +38,6 @@ class DBManager:
         названия вакансии и зарплаты и ссылки на вакансию
         """
 
-        # conn = psycopg2.connect(dbname=database_name, **params)
-        # cur = conn.cursor()
         self.cur.execute(
             """
             SELECT company_name, vacancy_name, salary_from, salary_to, vacancy_url 
@@ -60,8 +56,6 @@ class DBManager:
     def get_avg_salary(self):
         """Получает среднюю зарплату по вакансиям"""
 
-        # conn = psycopg2.connect(dbname=database_name, **params)
-        # cur = conn.cursor()
         self.cur.execute(
             """
             SELECT company_name, vacancy_name, salary_from, salary_to, CASE
@@ -88,8 +82,6 @@ class DBManager:
         зарплата выше средней по всем вакансиям
         """
 
-        # conn = psycopg2.connect(dbname=database_name, **params)
-        # cur = conn.cursor()
         self.cur.execute(
             """
             WITH salaries AS (
@@ -122,8 +114,6 @@ class DBManager:
         содержатся переданные в метод слова, например “python”
         """
 
-        # conn = psycopg2.connect(dbname=database_name, **params)
-        # cur = conn.cursor()
         query = """
                 SELECT company_name, vacancy_name, salary_from, salary_to, vacancy_url
                 FROM vacancies 
@@ -144,55 +134,57 @@ class DBManager:
         self.cur.close()
         self.conn.close()
 
-    def create_database(self):
+    @staticmethod
+    def create_database(database_name: str, params: dict):
         """
         Создание базы данных и таблиц для сохранения
         данных о вакансиях и компаниях.
         """
 
-        # conn = psycopg2.connect(dbname='postgres', **params)
-        self.conn.autocommit = True
-        # cur = conn.cursor()
+        conn = psycopg2.connect(dbname='postgres', **params)
+        conn.autocommit = True
+        cur = conn.cursor()
 
-        self.cur.execute(f"DROP DATABASE IF EXISTS {self.database_name}")
-        self.cur.execute(f"CREATE DATABASE {self.database_name}")
+        cur.execute(f"DROP DATABASE IF EXISTS {database_name}")
+        cur.execute(f"CREATE DATABASE {database_name}")
 
-        self.conn.close()
+        conn.close()
 
-        # conn = psycopg2.connect(dbname=database_name, **params)
+        conn = psycopg2.connect(dbname=database_name, **params)
 
-        with self.cur as cur:
+        with conn.cursor() as cur:
             cur.execute("""
-                        CREATE TABLE companies (
-                            company_id INTEGER PRIMARY KEY,
-                            company_name VARCHAR NOT NULL,
-                            vacancies_count INTEGER
-                        )
-                    """)
+                            CREATE TABLE companies (
+                                company_id INTEGER PRIMARY KEY,
+                                company_name VARCHAR NOT NULL,
+                                vacancies_count INTEGER
+                            )
+                        """)
 
-        with self.cur as cur:
+        with conn.cursor() as cur:
             cur.execute("""
-                        CREATE TABLE vacancies (
-                            vacancy_id SERIAL PRIMARY KEY,
-                            company_id INT REFERENCES companies(company_id),
-                            company_name VARCHAR NOT NULL,
-                            vacancy_name VARCHAR NOT NULL,
-                            salary_from INTEGER,
-                            salary_to INTEGER,
-                            currency VARCHAR(10),
-                            vacancy_url TEXT
-                        )
-                    """)
+                            CREATE TABLE vacancies (
+                                vacancy_id SERIAL PRIMARY KEY,
+                                company_id INT REFERENCES companies(company_id),
+                                company_name VARCHAR NOT NULL,
+                                vacancy_name VARCHAR NOT NULL,
+                                salary_from INTEGER,
+                                salary_to INTEGER,
+                                currency VARCHAR(10),
+                                vacancy_url TEXT
+                            )
+                        """)
 
-        self.conn.commit()
-        self.conn.close()
+        conn.commit()
+        conn.close()
 
-    def save_data_to_database(self, data: list[dict[str, Any]]):
+    @staticmethod
+    def save_data_to_database(data: list[dict[str, Any]], database_name: str, params: dict):
         """Сохранение данных о компаниях и вакансиях в базу данных."""
 
-        # conn = psycopg2.connect(dbname=database_name, **params)
+        conn = psycopg2.connect(dbname=database_name, **params)
 
-        with self.cur as cur:
+        with conn.cursor() as cur:
             for company in data:
                 company_id = company['items'][0]['employer']['id']
                 vacancies_count = company['found']
@@ -239,5 +231,5 @@ class DBManager:
                         (company_id, company_name, vacancy_name, salary_from, salary_to, currency, vacancy_url)
                     )
 
-        self.conn.commit()
-        self.conn.close()
+        conn.commit()
+        conn.close()
